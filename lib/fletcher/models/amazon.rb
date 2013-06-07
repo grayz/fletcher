@@ -14,6 +14,9 @@ module Fletcher
         when Nokogiri::HTML::Document
           # Get Name
           self.name = doc.css("h1.parseasinTitle").first_string
+            if self.name.nil?
+              self.name = doc.css("h1#title").first_string
+            end
            
           # Get Description
           self.description = doc.css("div#productDescriptionWrapper").first_string    
@@ -22,11 +25,23 @@ module Fletcher
           self.description = doc.xpath("//meta[@name='description']/@content").first_string if description.nil?
           
           # Get Price
-          parse_price(doc.css("b.priceLarge").first_string)
+          price_check = doc.css("b.priceLarge").first_string
+          unless price_check.nil?
+            parse_price(doc.css("b.priceLarge").first_string)
+          else
+            parse_price(doc.css("span.a-color-price").first_string)
+          end    
           
           # Get Images
           self.images = doc.xpath("//table[@class='productImageGrid']//img").attribute_array
           self.image = images.first
+            if self.image.nil?
+              self.images = doc.at_css("img#main-image")
+              self.image = self.images['src']
+            end
+
+          self.brand = doc.css("a#brand").first_string
+
         end            
       end
     end
